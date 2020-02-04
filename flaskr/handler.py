@@ -2,11 +2,13 @@ from flask import Flask, escape, Blueprint, current_app, jsonify, make_response,
 import base64
 import json
 import logging
+from pysqs_extended_client.SQSClientExtended import SQSClientExtended
 import threading
 import time
 import uuid
 
 from flaskr.flaskapp import FlaskApp
+from flaskr.sqs import sqs_cl
 
 bp = Blueprint('handler', __name__)
 
@@ -32,9 +34,22 @@ def test_stream():
 @bp.route('/tcowebsu/ob.aspx/<acnt>/', methods=['POST', 'GET', 'PATCH', 'PUT', 'DELETE'])
 @bp.route('/tcowebsu/ob.aspx/<acnt>/<path:path>', methods=['POST', 'GET', 'PATCH', 'PUT', 'DELETE'])
 def handler(acnt, path=None):
-    sqs = current_app.sqs
+    sqs = None
+    thread_data = threading.local()
+    try:
+        sqs = thread_data.sqs
+        logging.info("!!!!!!! got existing sqs")
+    except AttributeError:
+        logging.info("!!!!!!! create new sqs")
+        sqs = sqs_cl(current_app.config)
+        thread_data.sqs = sqs
+    sqs = thread_data.sqs
+    logging.info('!!!!! queue='+sqs.queue_resp)
+
     with current_app.rqcntr_lock:
-        current_app.rqcntr += 1
+        reqn = current_app.rqcntr + 1
+        current_app.rqcntr = reqn
+
     http = {
         "URL": request.url,
         "HTTPS": ("on" if request.is_secure else "off"),
@@ -47,7 +62,7 @@ def handler(acnt, path=None):
         http["HTTP_"+header[0].upper()] = header[1]
     req = {
         "QUEUE_RESP": sqs.queue_resp,
-        "REQ_NUM": current_app.rqcntr,
+        "REQ_NUM": reqn,
         "POST_DATA": base64.b64encode(request.get_data()).decode(),
         "HTTP": http
     }
@@ -58,44 +73,30 @@ def handler(acnt, path=None):
 
     queue_req = sqs.queue_rqs[acnt]
 
-    r = sqs.boto3_client.send_message(
-        QueueUrl=queue_req,
-        MessageBody=str_req
-    )
-    logging.debug("send to "+queue_req+" reply to "+queue_req+" reqn="+str(current_app.rqcntr)+" threadid="+str(threading.get_ident()))
+    r = sqs.sqs_client.send_message(queue_req, str_req, {})
+    logging.info("!!!!!!!! send to "+queue_req+" reply to "+queue_req+" reqn="+str(reqn)+" threadid="+str(threading.get_ident()))
 
     while True:
-        logging.debug("waiting for reply")
-        r = sqs.boto3_client.receive_message(
-            QueueUrl=sqs.queue_resp,
-            MaxNumberOfMessages=1,
-            WaitTimeSeconds=20
-        )
-        logging.debug(str(repr(r))[0:200])
-        if "Messages" not in r:
-            logging.debug("not messages")
-            continue
-        message = r['Messages'][0]
-        if not message:
-            logging.debug("not message")
+        logging.info("waiting for reply")
+        message = sqs.sqs_client.receive_message(sqs.queue_resp,1,20)
+        logging.info(str(repr(message))[0:200])
+        if message is None:
             continue
         break
     
+    message = message[0]
     receipt_handle = message['ReceiptHandle']
 
-    sqs.boto3_client.delete_message(
-        QueueUrl=sqs.queue_resp,
-        ReceiptHandle=receipt_handle
-    )
+    sqs.sqs_client.delete_message(sqs.queue_resp, receipt_handle)
 
     try:
         reply = json.loads(message['Body'])
     except:
         return "failed to parse reply as json - probably too big "+message['Body']
 
-    logging.debug('Received and deleted message reqn=' + str(reply['REQ_NUM']) + ' on '+" threadid="+str(threading.get_ident()))
-    if (reply['REQ_NUM'] != current_app.rqcntr):
-        return "request number mismatch "+str(current_app.rqcntr)+message['Body']
+    logging.info('Received and deleted message reqn=' + str(reply['REQ_NUM']) + ' on '+" threadid="+str(threading.get_ident()))
+    if (reply['REQ_NUM'] != reqn):
+        return "request number mismatch "+str(reqn)+message['Body']
     body = reply['RESPONSE']
     headers = reply['HEADERS']
 

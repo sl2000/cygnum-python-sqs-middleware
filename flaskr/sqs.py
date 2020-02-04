@@ -1,23 +1,19 @@
 import atexit
-import boto3
 from datetime import date
 import logging
 import os
+from pysqs_extended_client.SQSClientExtended import SQSClientExtended
 import threading
 import uuid
 
-class sqs(threading.local):
+class sqs_cl():
 
     def __init__(self, config):
+        self.log("thread starting "+str(threading.get_ident()))
+
         atexit.register(self.cleanup)
 
-        self.boto3_client = boto3.client(
-            'sqs',
-            aws_access_key_id=config['AWS_ACCESS_KEY'],
-            aws_secret_access_key=config['AWS_SECRET_KEY']
-        )
-        logging.debug("thread started")
-        logging.debug("aws stuff="+config['AWS_ACCESS_KEY']+" / "+config['AWS_SECRET_KEY'])
+        self.sqs_client = SQSClientExtended(config['AWS_ACCESS_KEY'], config['AWS_SECRET_KEY'], config['AWS_REGION'], config['BUCKET_NAME'])
         
         self.queue_rqs = {}
         for acnt in config['ACCOUNTS']:
@@ -29,25 +25,29 @@ class sqs(threading.local):
 
     def __get_queue(self, queue_name):
         try:
-            queue = self.boto3_client.create_queue(
+            queue = self.sqs_client.sqs.create_queue(
                 QueueName = queue_name,
                 Attributes = {
                     'MessageRetentionPeriod': '300'
                 }
             )
-            logging.debug("created new queue "+queue_name)
+            self.log("created new queue "+queue_name)
         except:
-            queue = self.boto3_client.get_queue_url(QueueName = queue_name)
-            logging.debug("got existing queue "+queue_name)
+            queue = self.sqs_client.sqs.get_queue_url(QueueName = queue_name)
+            self.log("got existing queue "+queue_name)
         return queue['QueueUrl']
 
     def cleanup(self):
-        logging.debug("cleanup!!")
+        self.log("cleanup!!")
         if ('cyg-resp1' in self.queue_resp):
             return
         try:
-            self.boto3_client.delete_queue(QueueUrl=self.queue_resp)
-            logging.debug("deleted queue "+self.queue_resp)
+            self.sqs_client.sqs.delete_queue(QueueUrl=self.queue_resp)
+            self.log("deleted queue "+self.queue_resp)
         except:
-            logging.debug("failed to delete queue "+self.queue_resp)
+            self.log("failed to delete queue "+self.queue_resp)
+            pass
+
+    def log(self, message):
+        print(message)
 
