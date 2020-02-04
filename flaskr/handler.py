@@ -44,7 +44,7 @@ def handler(acnt, path=None):
         sqs = sqs_cl(current_app.config)
         thread_data.sqs = sqs
     sqs = thread_data.sqs
-    logging.info('!!!!! queue='+sqs.queue_resp)
+    logging.info('!!!!!! queue='+sqs.queue_resp)
 
     with current_app.rqcntr_lock:
         reqn = current_app.rqcntr + 1

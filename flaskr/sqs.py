@@ -38,7 +38,7 @@ class sqs_cl():
         return queue['QueueUrl']
 
     def cleanup(self):
-        self.log("cleanup!!")
+        self.log("cleanup")
         if ('cyg-resp1' in self.queue_resp):
             return
         try:
@@ -49,5 +49,5 @@ class sqs_cl():
             pass
 
     def log(self, message):
-        print(message)
+        logging.info(message)
 
