@@ -16,7 +16,7 @@ bp = Blueprint('handler', __name__)
 def return_config():
     response = {
         "UNIDATA_SERVER_ID": current_app.config['UNIDATA_SERVER_ID'],
-        "BUCKET_UNQ": current_app.config['BUCKET_UNQ']
+        "BUCKET_NAME": current_app.config['BUCKET_NAME']
     }
     return response
 
@@ -60,10 +60,13 @@ def handler(acnt, path=None):
     }
     for header in request.headers.items():
         http["HTTP_"+header[0].upper()] = header[1]
+
+    post_data = request.get_data()
+
     req = {
         "QUEUE_RESP": sqs.queue_resp,
         "REQ_NUM": reqn,
-        "POST_DATA": base64.b64encode(request.get_data()).decode(),
+        "POST_DATA": base64.encodebytes(post_data).decode(),
         "HTTP": http
     }
     str_req = json.dumps(req)
@@ -76,11 +79,15 @@ def handler(acnt, path=None):
     r = sqs.sqs_client.send_message(queue_req, str_req, {})
     logging.info("!!!!!!!! send to "+queue_req+" reply to "+queue_req+" reqn="+str(reqn)+" threadid="+str(threading.get_ident()))
 
+    wait_last_contact = time.time();
     while True:
         logging.info("waiting for reply")
         message = sqs.sqs_client.receive_message(sqs.queue_resp,1,20)
         logging.info(str(repr(message))[0:200])
         if message is None:
+            logging.info("No reply after " + str(time.time() - wait_last_contact))
+            if (time.time() - wait_last_contact) > current_app.TIMEOUT:
+                return "Timeout "+str(time.time() - wait_last_contact), 500
             continue
         break
     
@@ -102,6 +109,7 @@ def handler(acnt, path=None):
 
     response = make_response()
     rheaders = response.headers
+    status = 200
 
     for header in headers.split('\xFD'):
         header = header.split('\xFC')
@@ -110,15 +118,23 @@ def handler(acnt, path=None):
             val = header[1]
         else:
             val = ""
-
         lname = name.lower()
         if lname == "binary":
             body = base64.b64decode(body)
-        elif lname == "something else":
-            pass
+        elif lname == "cache":
+            rheaders.set('Cache-Control', 'public, max-age=31536000')
+        elif lname == "status":
+            status = int(val)
+        elif lname == "x-tco-version":
+            rheaders.set(name, val + " CACI=" + OB_VERSION+ " PYTHON="+sys.version)
+        elif lname == "redirect":
+            status = 302
+            rheaders.set('Location', val)
         else:
-            rheaders[name] = val
+            rheaders.set(name,val)
+
+    rheaders.set('Content-Security-Policy', "default-src 'self' bam.nr-data.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' ajax.googleapis.com d3js.org js-agent.newrelic.com bam.nr-data.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:")
 
     response.data = body
     
-    return response
+    return response, status

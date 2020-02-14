@@ -14,6 +14,7 @@ class sqs_cl():
         atexit.register(self.cleanup)
 
         self.sqs_client = SQSClientExtended(config['AWS_ACCESS_KEY'], config['AWS_SECRET_KEY'], config['AWS_REGION'], config['BUCKET_NAME'])
+        self.sqs_client.set_always_through_s3(False)
         
         self.queue_rqs = {}
         for acnt in config['ACCOUNTS']:
