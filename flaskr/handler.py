@@ -122,7 +122,8 @@ def handler(acnt, path=None):
         if lname == "binary":
             body = base64.b64decode(body)
         elif lname == "cache":
-            rheaders.set('Cache-Control', 'public, max-age=31536000')
+            response.cache_control.public = True
+            response.cache_control.max_age = 31536000
         elif lname == "status":
             status = int(val)
         elif lname == "x-tco-version":
