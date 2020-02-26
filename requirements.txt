@@ -3,10 +3,12 @@ botocore==1.13.45
 Click==7.0
 docutils==0.15.2
 Flask==1.1.1
+gunicorn==20.0.4
 itsdangerous==1.1.0
 Jinja2==2.10.3
 jmespath==0.9.4
 MarkupSafe==1.1.1
+pkg-resources==0.0.0
 pysqs-extended-client==0.0.1
 python-dateutil==2.8.1
 s3transfer==0.2.1

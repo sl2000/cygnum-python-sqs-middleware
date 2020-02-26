@@ -61,6 +61,16 @@ def handler(acnt, path=None):
     for header in request.headers.items():
         http["HTTP_"+header[0].upper()] = header[1]
 
+    v = http.get("HTTP_X-FORWARDED-REMOTE-ADDR")
+    if v:
+        http["REMOTE_ADDR"] = v
+        del http["HTTP_X-FORWARDED-REMOTE-ADDR"]
+
+    v = http.get("HTTP_X-FORWARDED-PROTO")
+    if v:
+        http["HTTPS"] = "on" if v == "https" else "off"
+        del http["HTTP_X-FORWARDED-PROTO"]
+        
     post_data = request.get_data()
 
     req = {
@@ -133,8 +143,6 @@ def handler(acnt, path=None):
             rheaders.set('Location', val)
         else:
             rheaders.set(name,val)
-
-    rheaders.set('Content-Security-Policy', "default-src 'self' bam.nr-data.net; script-src 'self' 'unsafe-inline' 'unsafe-eval' ajax.googleapis.com d3js.org js-agent.newrelic.com bam.nr-data.net; style-src 'self' 'unsafe-inline'; img-src 'self' data:")
 
     response.data = body
     

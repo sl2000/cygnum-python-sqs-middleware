@@ -1,13 +1,13 @@
 [Unit]
-Description=uWSGI instance to serve cygnum
+Description=Gunicorn instance to serve cygnum
 After=network.target
 
 [Service]
-User=ubuntu
-Group=ubuntu
+User=www-data
+Group=www-data
 WorkingDirectory=/home/ubuntu/cygnum
 Environment="PATH=/home/ubuntu/cygnum/env/bin"
-ExecStart=/home/ubuntu/cygnum/env/bin/uwsgi --ini cygnum.ini
+ExecStart=/home/ubuntu/cygnum/env/bin/gunicorn --workers 3 --bind unix:cygnum.sock -m 007 wsgi:app
 
 [Install]
 WantedBy=multi-user.target
