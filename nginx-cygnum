@@ -1,4 +1,5 @@
 uwsgi_cache_path /home/ubuntu/cygnum/cache levels=1:2 keys_zone=cygnum_cache:10m max_size=1g inactive=3d use_temp_path=off;
+uwsgi_cache_key "$scheme$request_method$request_uri";
 
 server {
     server_name dev.caci-es.co.uk;
@@ -7,7 +8,7 @@ server {
  
         uwsgi_cache cygnum_cache;
         uwsgi_cache_lock on;
-        add_header X-Proxy-Cache $upstream_cache_status;
+        add_header X-CACI-Cache $upstream_cache_status;
 
         include uwsgi_params;
         uwsgi_pass unix:/home/ubuntu/cygnum/cygnum.sock;
