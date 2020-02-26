@@ -7,7 +7,7 @@ User=www-data
 Group=www-data
 WorkingDirectory=/home/ubuntu/cygnum
 Environment="PATH=/home/ubuntu/cygnum/env/bin"
-ExecStart=/home/ubuntu/cygnum/env/bin/gunicorn --workers 3 --bind unix:cygnum.sock -m 007 wsgi:app
+ExecStart=/home/ubuntu/cygnum/env/bin/gunicorn --config gunicorn.conf.py wsgi:app
 
 [Install]
 WantedBy=multi-user.target
