@@ -1,0 +1,13 @@
+[Unit]
+Description=uWSGI instance to serve cygnum
+After=network.target
+
+[Service]
+User=ubuntu
+Group=ubuntu
+WorkingDirectory=/home/ubuntu/cygnum
+Environment="PATH=/home/ubuntu/cygnum/env/bin"
+ExecStart=/home/ubuntu/cygnum/env/bin/uwsgi --ini cygnum.ini
+
+[Install]
+WantedBy=multi-user.target
