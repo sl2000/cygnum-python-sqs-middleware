@@ -1,0 +1,26 @@
+Create virtual env:
+D:\CACI\DEV\OBWEB\python-web-middleware\app>python -m venv .\env
+
+Activate virtual env:
+D:\CACI\DEV\OBWEB\python-web-middleware\app>.\env\Scripts\activate
+
+Get list of packages:
+pip freeze > requirements.txt
+
+Install list of packages:
+pip install -r awrequirements.txt
+
+aws sqs list-queues
+aws sqs receive-message --queue-url https://eu-west-2.queue.amazonaws.com/095322834266/cyg-rq1
+
+---
+
+sudo systemctl restart nginx
+sudo systemctl restart cygnum
+
+git status
+git diff [file]
+git commit -a -m "description of change"
+git push origin
+git fetch origin
+git pull
