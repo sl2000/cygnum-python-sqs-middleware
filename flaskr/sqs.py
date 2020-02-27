@@ -1,17 +1,22 @@
 import atexit
 from datetime import date
+from flask import current_app
 import logging
 import os
+import platform
 from pysqs_extended_client.SQSClientExtended import SQSClientExtended
 import threading
+import time
 import uuid
 
 class sqs_cl():
 
-    def __init__(self, config):
+    def __init__(self):
         self.log("thread starting "+str(threading.get_ident()))
 
         atexit.register(self.cleanup)
+
+        config = current_app.config
 
         self.sqs_client = SQSClientExtended(config['AWS_ACCESS_KEY'], config['AWS_SECRET_KEY'], config['AWS_REGION'], config['BUCKET_NAME'])
         self.sqs_client.set_always_through_s3(False)
@@ -21,8 +26,34 @@ class sqs_cl():
             req_qname = 'cyg-rq-' + config['UNIDATA_SERVER_ID'] + '-' + acnt
             self.queue_rqs[acnt] = self.__get_queue(req_qname)
 
-        resp_qname = 'cyg-resp-'+date.today().strftime("%Y%m%d")+"-"+str(os.getpid()) + "-" + str(threading.get_ident()) + "-" + str(uuid.uuid1())
+        self.create_resp_queue()
+
+    def get_queue_resp(self):
+        idle_time = time.time() - self.last_qtime
+        if idle_time >= 120:
+            # Check that can read from queue - otherwise create a new one
+            # Copes with queue being deleted by server tidy up process
+            try:
+                dummy = self.sqs_client.receive_message(self.queue_resp,1,0)
+            except:
+                self.create_resp_queue()
+        self.last_qtime = time.time()
+        return self.queue_resp
+
+    def create_resp_queue(self):
+        config = current_app.config
+        resp_qname = (
+            'cyg-resp-'
+            + date.today().strftime("%Y%m%d")
+            + "-" + config['UNIDATA_SERVER_ID'].replace("-","_")
+            + "-" + platform.node().replace("-","_")
+            + "-" + str(os.getpid())
+            + "-" + str(threading.get_ident())
+            # + "-" + str(uuid.uuid1())
+        )
+        resp_qname = resp_qname.replace(".","_")
         self.queue_resp = self.__get_queue(resp_qname)
+        self.last_qtime = time.time()
 
     def __get_queue(self, queue_name):
         try:

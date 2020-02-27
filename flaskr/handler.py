@@ -42,10 +42,11 @@ def handler(acnt, path=None):
         logging.info("!!!!!!! got existing sqs")
     except AttributeError:
         logging.info("!!!!!!! create new sqs")
-        sqs = sqs_cl(current_app.config)
+        sqs = sqs_cl()
         thread_data.sqs = sqs
+        thread_data.reqn = 0
     sqs = thread_data.sqs
-    logging.info('!!!!!! queue='+sqs.queue_resp)
+    thread_data.reqn += 1
 
     with current_app.rqcntr_lock:
         reqn = current_app.rqcntr + 1
@@ -58,7 +59,7 @@ def handler(acnt, path=None):
         "PATH_INFO": request.path,
         "QUERY_STRING": request.query_string.decode(),
         "REMOTE_ADDR": request.remote_addr,
-        "X_CACI_IID": current_app.OB_VERSION + " " + str(os.getpid()) + " " + str(threading.get_ident())
+        "X_CACI_IID": current_app.OB_VERSION + " " + str(os.getpid()) + " " + str(threading.get_ident()) + "q" + str(thread_data.reqn) + "a" + str(reqn)
     }
     for header in request.headers.items():
         http["HTTP_"+header[0].upper()] = header[1]
@@ -74,9 +75,12 @@ def handler(acnt, path=None):
         del http["HTTP_X-FORWARDED-PROTO"]
         
     post_data = request.get_data()
+    queue_resp = sqs.get_queue_resp()
+    
+    logging.info('!!!!!! queue='+queue_resp+" qreqn="+str(thread_data.reqn))
 
     req = {
-        "QUEUE_RESP": sqs.queue_resp,
+        "QUEUE_RESP": queue_resp,
         "REQ_NUM": reqn,
         "POST_DATA": base64.encodebytes(post_data).decode(),
         "HTTP": http
@@ -94,7 +98,7 @@ def handler(acnt, path=None):
     wait_last_contact = time.time();
     while True:
         logging.info("waiting for reply")
-        message = sqs.sqs_client.receive_message(sqs.queue_resp,1,20)
+        message = sqs.sqs_client.receive_message(queue_resp,1,20)
         logging.info(str(repr(message))[0:200])
         if message is None:
             logging.info("No reply after " + str(time.time() - wait_last_contact))
@@ -106,7 +110,7 @@ def handler(acnt, path=None):
     message = message[0]
     receipt_handle = message['ReceiptHandle']
 
-    sqs.sqs_client.delete_message(sqs.queue_resp, receipt_handle)
+    sqs.sqs_client.delete_message(queue_resp, receipt_handle)
 
     try:
         reply = json.loads(message['Body'])
