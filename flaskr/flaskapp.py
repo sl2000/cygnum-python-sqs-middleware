@@ -6,7 +6,7 @@ import uuid
 
 class FlaskApp(Flask):
 
-    OB_VERSION = "200205"
+    OB_VERSION = "200226"
 
     def __init__(self, *args, **kwargs):
         super(FlaskApp, self).__init__(*args, **kwargs)

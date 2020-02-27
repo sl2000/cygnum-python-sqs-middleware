@@ -2,6 +2,7 @@ from flask import Flask, escape, Blueprint, current_app, jsonify, make_response,
 import base64
 import json
 import logging
+import os
 from pysqs_extended_client.SQSClientExtended import SQSClientExtended
 import threading
 import time
@@ -56,7 +57,8 @@ def handler(acnt, path=None):
         "REQUEST_METHOD": request.method,
         "PATH_INFO": request.path,
         "QUERY_STRING": request.query_string.decode(),
-        "REMOTE_ADDR": request.remote_addr
+        "REMOTE_ADDR": request.remote_addr,
+        "X_CACI_IID": current_app.OB_VERSION + " " + str(os.getpid()) + " " + str(threading.get_ident())
     }
     for header in request.headers.items():
         http["HTTP_"+header[0].upper()] = header[1]
