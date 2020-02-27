@@ -18,9 +18,19 @@ aws sqs receive-message --queue-url https://eu-west-2.queue.amazonaws.com/095322
 sudo systemctl restart nginx
 sudo systemctl restart cygnum
 
+sudo less /var/log/nginx/error.log - checks the Nginx error logs.
+sudo less /var/log/nginx/access.log - checks the Nginx access logs.
+sudo journalctl -u nginx - checks the Nginx process logs.
+sudo journalctl -u cygnum - checks app log
+
+source env/bin/activate
+gunicorn --config gunicorn.conf.py wsgi:app - run directly
+
+
 git status
 git diff [file]
 git commit -a -m "description of change"
 git push origin
 git fetch origin
 git pull
+

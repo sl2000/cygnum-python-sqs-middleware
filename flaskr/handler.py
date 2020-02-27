@@ -12,6 +12,7 @@ from flaskr.flaskapp import FlaskApp
 from flaskr.sqs import sqs_cl
 
 bp = Blueprint('handler', __name__)
+thread_data = threading.local()
 
 @bp.route('/config/')
 def return_config():
@@ -36,11 +37,11 @@ def test_stream():
 @bp.route('/tcowebsu/ob.aspx/<acnt>/<path:path>', methods=['POST', 'GET', 'PATCH', 'PUT', 'DELETE'])
 def handler(acnt, path=None):
     sqs = None
-    thread_data = threading.local()
     try:
         sqs = thread_data.sqs
-        logging.info("!!!!!!! got existing sqs")
-    except AttributeError:
+        logging.info("!!!!!!! got existing sqs nrq="+str(thread_data.reqn))
+    except AttributeError as err:
+        logging.info(repr(err))
         logging.info("!!!!!!! create new sqs")
         sqs = sqs_cl()
         thread_data.sqs = sqs

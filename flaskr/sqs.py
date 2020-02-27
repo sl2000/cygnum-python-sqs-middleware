@@ -26,6 +26,7 @@ class sqs_cl():
             req_qname = 'cyg-rq-' + config['UNIDATA_SERVER_ID'] + '-' + acnt
             self.queue_rqs[acnt] = self.__get_queue(req_qname)
 
+        self.n_resp_queue = 0
         self.create_resp_queue()
 
     def get_queue_resp(self):
@@ -42,6 +43,7 @@ class sqs_cl():
 
     def create_resp_queue(self):
         config = current_app.config
+        self.n_resp_queue += 1
         resp_qname = (
             'cyg-resp-'
             + date.today().strftime("%Y%m%d")
@@ -49,6 +51,7 @@ class sqs_cl():
             + "-" + platform.node().replace("-","_")
             + "-" + str(os.getpid())
             + "-" + str(threading.get_ident())
+            + "-" + str(self.n_resp_queue)
             # + "-" + str(uuid.uuid1())
         )
         resp_qname = resp_qname.replace(".","_")
