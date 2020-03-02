@@ -55,6 +55,7 @@ class sqs_cl():
             # + "-" + str(uuid.uuid1())
         )
         resp_qname = resp_qname.replace(".","_")
+        self.queue_resp_name = resp_qname
         self.queue_resp = self.__get_queue(resp_qname)
         self.last_qtime = time.time()
 

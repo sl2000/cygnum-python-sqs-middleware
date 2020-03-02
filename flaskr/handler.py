@@ -1,5 +1,6 @@
 from flask import Flask, escape, Blueprint, current_app, jsonify, make_response, request, Response
 import base64
+import botocore
 import json
 import logging
 import os
@@ -95,34 +96,49 @@ def handler(acnt, path=None):
 
     r = sqs.sqs_client.send_message(queue_req, str_req, {})
     logging.info("!!!!!!!! send to "+queue_req+" reply to "+queue_req+" reqn="+str(reqn)+" threadid="+str(threading.get_ident()))
-
-    wait_last_contact = time.time();
     while True:
-        logging.info("waiting for reply")
-        message = sqs.sqs_client.receive_message(queue_resp,1,20)
-        logging.info(str(repr(message))[0:200])
-        if message is None:
-            logging.info("No reply after " + str(time.time() - wait_last_contact))
-            if (time.time() - wait_last_contact) > current_app.TIMEOUT:
-                return "Timeout "+str(time.time() - wait_last_contact), 500
-            continue
+        wait_last_contact = time.time();
+        while True:
+            logging.info("waiting for reply")
+            try:
+                message = sqs.sqs_client.receive_message(queue_resp,1,20)
+            except Exception as err:
+                etxt =  "Failed to read from queue "+sqs.queue_resp_name+". Err="+str(err)
+                logging.error(err)
+                sqs.create_resp_queue()
+                return etxt, 500
+            logging.info(str(repr(message))[0:200])
+            if message is None:
+                logging.info("No reply after " + str(time.time() - wait_last_contact))
+                if (time.time() - wait_last_contact) > current_app.TIMEOUT:
+                    return "Timeout "+str(time.time() - wait_last_contact), 500
+                continue
+            break
+        
+        message = message[0]
+        receipt_handle = message['ReceiptHandle']
+
+        try:
+            sqs.sqs_client.delete_message(queue_resp, receipt_handle)
+        except Exception as err:
+            logging.error(err)
+            sqs.create_resp_queue()
+
+        try:
+            reply = json.loads(message['Body'])
+        except:
+            return "failed to parse reply as json - probably too big "+message['Body'], 500
+
+        logging.info('Received and deleted message reqn=' + str(reply['REQ_NUM']) + ' on '+" threadid="+str(threading.get_ident()))
+        reply_reqn = reply['REQ_NUM']
+        if (reply_reqn != reqn):
+            if (reply_reqn == "PING"):
+                logging.info('PING so wait')
+                continue
+            return "request number mismatch "+str(reqn)+message['Body'], 500
+        body = reply['RESPONSE']
+        headers = reply['HEADERS']
         break
-    
-    message = message[0]
-    receipt_handle = message['ReceiptHandle']
-
-    sqs.sqs_client.delete_message(queue_resp, receipt_handle)
-
-    try:
-        reply = json.loads(message['Body'])
-    except:
-        return "failed to parse reply as json - probably too big "+message['Body']
-
-    logging.info('Received and deleted message reqn=' + str(reply['REQ_NUM']) + ' on '+" threadid="+str(threading.get_ident()))
-    if (reply['REQ_NUM'] != reqn):
-        return "request number mismatch "+str(reqn)+message['Body']
-    body = reply['RESPONSE']
-    headers = reply['HEADERS']
 
     response = make_response()
     rheaders = response.headers
