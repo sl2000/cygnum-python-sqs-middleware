@@ -17,6 +17,9 @@ server {
         proxy_cache_lock on;
         add_header X-CACI-Cache $upstream_cache_status;
 
+        proxy_send_timeout 7200s;
+        proxy_read_timeout 7200s;
+
         proxy_set_header Host $http_host;
         proxy_set_header X-Forwarded-Remote-Addr $remote_addr;
         proxy_set_header X-Forwarded-Proto $scheme;

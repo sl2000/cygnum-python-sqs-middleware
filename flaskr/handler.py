@@ -111,7 +111,7 @@ def handler(acnt, path=None):
             if message is None:
                 logging.info("No reply after " + str(time.time() - wait_last_contact))
                 if (time.time() - wait_last_contact) > current_app.TIMEOUT:
-                    return "Timeout "+str(time.time() - wait_last_contact), 500
+                    return "No response from database server (time="+str(time.time() - wait_last_contact)+")", 500
                 continue
             break
         

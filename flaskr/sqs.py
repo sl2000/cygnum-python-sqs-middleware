@@ -7,7 +7,6 @@ import platform
 from pysqs_extended_client.SQSClientExtended import SQSClientExtended
 import threading
 import time
-import uuid
 
 class sqs_cl():
 
@@ -45,14 +44,13 @@ class sqs_cl():
         config = current_app.config
         self.n_resp_queue += 1
         resp_qname = (
-            'cyg-resp-'
-            + date.today().strftime("%Y%m%d")
+            'cyg-resp'       
             + "-" + config['UNIDATA_SERVER_ID'].replace("-","_")
             + "-" + platform.node().replace("-","_")
+            + "-" + date.today().strftime("%Y%m%d")
             + "-" + str(os.getpid())
             + "-" + str(threading.get_ident())
             + "-" + str(self.n_resp_queue)
-            # + "-" + str(uuid.uuid1())
         )
         resp_qname = resp_qname.replace(".","_")
         self.queue_resp_name = resp_qname

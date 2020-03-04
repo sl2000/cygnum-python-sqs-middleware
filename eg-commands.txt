@@ -1,31 +1,16 @@
-Create virtual env:
-D:\CACI\DEV\OBWEB\python-web-middleware\app>python -m venv .\env
-
-Activate virtual env:
-D:\CACI\DEV\OBWEB\python-web-middleware\app>.\env\Scripts\activate
-
-Get list of packages:
-pip freeze > requirements.txt
-
-Install list of packages:
-pip install -r awrequirements.txt
-
-aws sqs list-queues
-aws sqs receive-message --queue-url https://eu-west-2.queue.amazonaws.com/095322834266/cyg-rq1
-
----
-
 sudo systemctl restart nginx
-sudo systemctl restart cygnum
+sudo systemctl kill -s HUP cygnum.service -- restart gunicorn gracefully with new config / software - see http://docs.gunicorn.org/en/latest/signals.html
 
-sudo less /var/log/nginx/error.log - checks the Nginx error logs.
-sudo less /var/log/nginx/access.log - checks the Nginx access logs.
-sudo journalctl -u nginx - checks the Nginx process logs.
-sudo journalctl -u cygnum - checks app log
+sudo less /var/log/nginx/error.log -- checks the Nginx error logs.
+sudo less /var/log/nginx/access.log -- checks the Nginx access logs.
+sudo journalctl -u nginx -- checks the Nginx process logs.
+sudo journalctl -u cygnum --since "1 hour ago" -- checks app log
 
 source env/bin/activate
 gunicorn --config gunicorn.conf.py wsgi:app - run directly
 
+source env/bin/activate
+pip freeze > requirements.txt
 
 git status
 git diff [file]
@@ -33,4 +18,3 @@ git commit -a -m "description of change"
 git push origin
 git fetch origin
 git pull
-
