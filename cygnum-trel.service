@@ -1,0 +1,15 @@
+# sudo ln -s /home/ubuntu/cygnum/cygnum-trel.service /etc/systemd/system/cygnum-trel.service
+[Unit]
+Description=Gunicorn instance to serve cygnum
+After=network.target
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/home/ubuntu/cygnum
+Environment="PATH=/home/ubuntu/cygnum/env/bin"
+Environment="CYGNUM_CONFIG=/home/ubuntu/cygnum/instance/config-trel.py"
+ExecStart=/home/ubuntu/cygnum/env/bin/gunicorn --config gunicorn-conf-trel.py wsgi:app
+
+[Install]
+WantedBy=multi-user.target

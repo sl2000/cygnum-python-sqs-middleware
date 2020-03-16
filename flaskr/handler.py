@@ -34,9 +34,9 @@ def test_stream():
             time.sleep(1)
     return Response(generate())
 
-@bp.route('/tcowebsu/ob.aspx/<acnt>/', methods=['POST', 'GET', 'PATCH', 'PUT', 'DELETE'])
-@bp.route('/tcowebsu/ob.aspx/<acnt>/<path:path>', methods=['POST', 'GET', 'PATCH', 'PUT', 'DELETE'])
-def handler(acnt, path=None):
+@bp.route('/<app>/ob.aspx/<acnt>/', methods=['POST', 'GET', 'PATCH', 'PUT', 'DELETE'])
+@bp.route('/<app>/ob.aspx/<acnt>/<path:path>', methods=['POST', 'GET', 'PATCH', 'PUT', 'DELETE'])
+def handler(app, acnt, path=None):
     sqs = None
     try:
         sqs = thread_data.sqs
@@ -131,7 +131,7 @@ def handler(acnt, path=None):
 
         logging.info('Received and deleted message reqn=' + str(reply['REQ_NUM']) + ' on '+" threadid="+str(threading.get_ident()))
         reply_reqn = reply['REQ_NUM']
-        if (reply_reqn != reqn):
+        if (reply_reqn != reqn and reply_reqn != "CRASH"):
             if (reply_reqn == "PING"):
                 logging.info('PING so wait')
                 continue

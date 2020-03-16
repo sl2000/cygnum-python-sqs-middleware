@@ -22,7 +22,12 @@ class sqs_cl():
         
         self.queue_rqs = {}
         for acnt in config['ACCOUNTS']:
-            req_qname = 'cyg-rq-' + config['UNIDATA_SERVER_ID'] + '-' + acnt
+            req_qname = (
+                "cyg"
+                + "-" + config['UNIDATA_SERVER_ID'].replace("-","_")
+                + "-rq"
+                + "-" + acnt
+            )
             self.queue_rqs[acnt] = self.__get_queue(req_qname)
 
         self.n_resp_queue = 0
@@ -44,8 +49,9 @@ class sqs_cl():
         config = current_app.config
         self.n_resp_queue += 1
         resp_qname = (
-            'cyg-resp'       
+            "cyg"
             + "-" + config['UNIDATA_SERVER_ID'].replace("-","_")
+            + "-resp"
             + "-" + platform.node().replace("-","_")
             + "-" + date.today().strftime("%Y%m%d")
             + "-" + str(os.getpid())
