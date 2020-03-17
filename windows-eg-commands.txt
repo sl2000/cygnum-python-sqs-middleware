@@ -8,7 +8,7 @@ Get list of packages:
 pip freeze > requirements.txt
 
 Install list of packages:
-pip install -r awrequirements.txt
+pip install -r requirements.txt
 
 aws sqs list-queues
 aws sqs receive-message --queue-url https://eu-west-2.queue.amazonaws.com/095322834266/cyg-rq1
