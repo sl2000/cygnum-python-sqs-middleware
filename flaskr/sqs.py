@@ -32,6 +32,7 @@ class sqs_cl():
 
         self.n_resp_queue = 0
         self.create_resp_queue()
+        self.server_name = platform.node()
 
     def get_queue_resp(self):
         idle_time = time.time() - self.last_qtime

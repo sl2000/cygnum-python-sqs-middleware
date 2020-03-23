@@ -61,6 +61,7 @@ def handler(app, acnt, path=None):
         "PATH_INFO": request.path,
         "QUERY_STRING": request.query_string.decode(),
         "REMOTE_ADDR": request.remote_addr,
+        "SERVER_NAME": sqs.server_name,
         "X_CACI_IID": current_app.OB_VERSION + " " + str(os.getpid()) + " " + str(threading.get_ident()) + "q" + str(thread_data.reqn) + "a" + str(reqn)
     }
     for header in request.headers.items():
