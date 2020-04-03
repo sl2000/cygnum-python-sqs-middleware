@@ -144,6 +144,7 @@ def handler(app, acnt, path=None):
     response = make_response()
     rheaders = response.headers
     status = 200
+    cache = False
 
     for header in headers.split('\xFD'):
         header = header.split('\xFC')
@@ -156,8 +157,9 @@ def handler(app, acnt, path=None):
         if lname == "binary":
             body = base64.b64decode(body)
         elif lname == "cache":
-            response.cache_control.public = True
-            response.cache_control.max_age = 31536000
+            cache = True
+        elif lname == "cache-control" and val == "No-Cache":
+            cache = False
         elif lname == "status":
             status = int(val)
         elif lname == "x-tco-version":
@@ -167,6 +169,14 @@ def handler(app, acnt, path=None):
             rheaders.set('Location', val)
         else:
             rheaders.set(name,val)
+
+    if cache:
+        response.cache_control.public = True
+        response.cache_control.max_age = 31536000
+    else:
+        response.cache_control.private = True
+        response.cache_control.no_store = True
+        response.cache_control.no_cache = True
 
     response.data = body
     

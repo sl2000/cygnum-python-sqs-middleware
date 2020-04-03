@@ -2,6 +2,8 @@
 proxy_cache_path /home/ubuntu/cygnum/cache levels=1:2 keys_zone=cygnum_cache:10m max_size=1g inactive=3d use_temp_path=off;
 proxy_cache_key "$scheme$request_method$request_uri";
 
+server_tokens off;
+
 upstream cygnum_server_dev {
     server unix:/home/ubuntu/cygnum/cygnum.sock fail_timeout=0;
 }
@@ -32,6 +34,12 @@ server {
 
     proxy_redirect off;
 
+    add_header Expect-CT 'enforce, max-age=30, report-uri="https://cacies.report-uri.com/r/d/ct/reportOnly"' always;
+    add_header Strict-Transport-Security "max-age=31536000" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+
     location /tcowebsu/ {
         proxy_pass http://cygnum_server_dev;
     }
@@ -50,8 +58,49 @@ server {
     include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
     ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
 
+    ssl_stapling on;
+    ssl_stapling_verify on;
 
 
+
+
+
+
+    ssl_trusted_certificate /etc/letsencrypt/live/dev.caci-es.co.uk/chain.pem; # managed by Certbot
+
+
+
+}
+
+server {
+    server_name essupport.caci-es.co.uk;
+
+    proxy_send_timeout 7200s;
+    proxy_read_timeout 7200s;
+
+    proxy_set_header Host $http_host;
+    proxy_set_header X-Forwarded-Remote-Addr $remote_addr;
+    proxy_set_header X-Forwarded-Proto $scheme;
+
+    proxy_redirect off;
+
+    location / {
+        proxy_pass https://essupport.caci.co.uk;
+    }
+
+
+    listen 443 ssl; # managed by Certbot
+    ssl_certificate /etc/letsencrypt/live/dev.caci-es.co.uk/fullchain.pem; # managed by Certbot
+    ssl_certificate_key /etc/letsencrypt/live/dev.caci-es.co.uk/privkey.pem; # managed by Certbot
+    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
+
+
+
+
+    ssl_trusted_certificate /etc/letsencrypt/live/dev.caci-es.co.uk/chain.pem; # managed by Certbot
+    ssl_stapling on; # managed by Certbot
+    ssl_stapling_verify on; # managed by Certbot
 
 }
 
@@ -67,3 +116,17 @@ server {
 
 }
 
+
+
+server {
+    if ($host = essupport.caci-es.co.uk) {
+        return 301 https://$host$request_uri;
+    } # managed by Certbot
+
+
+    server_name essupport.caci-es.co.uk;
+    listen 80;
+    return 404; # managed by Certbot
+
+
+}
