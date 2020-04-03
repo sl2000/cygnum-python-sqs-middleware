@@ -9,6 +9,7 @@ import threading
 import time
 import uuid
 
+
 from flaskr.flaskapp import FlaskApp
 from flaskr.sqs import sqs_cl
 
@@ -40,10 +41,10 @@ def handler(app, acnt, path=None):
     sqs = None
     try:
         sqs = thread_data.sqs
-        logging.info("!!!!!!! got existing sqs nrq="+str(thread_data.reqn))
+        current_app.logger.info("!!!!!!! got existing sqs nrq="+str(thread_data.reqn))
     except AttributeError as err:
-        logging.info(repr(err))
-        logging.info("!!!!!!! create new sqs")
+        current_app.logger.info(repr(err))
+        current_app.logger.info("!!!!!!! create new sqs")
         sqs = sqs_cl()
         thread_data.sqs = sqs
         thread_data.reqn = 0
@@ -80,7 +81,7 @@ def handler(app, acnt, path=None):
     post_data = request.get_data()
     queue_resp = sqs.get_queue_resp()
     
-    logging.info('!!!!!! queue='+queue_resp+" qreqn="+str(thread_data.reqn))
+    current_app.logger.info('!!!!!! queue='+queue_resp+" qreqn="+str(thread_data.reqn))
 
     req = {
         "QUEUE_RESP": queue_resp,
@@ -96,21 +97,21 @@ def handler(app, acnt, path=None):
     queue_req = sqs.queue_rqs[acnt]
 
     r = sqs.sqs_client.send_message(queue_req, str_req, {})
-    logging.info("!!!!!!!! send to "+queue_req+" reply to "+queue_req+" reqn="+str(reqn)+" threadid="+str(threading.get_ident()))
+    current_app.logger.info("!!!!!!!! send to "+queue_req+" reply to "+queue_req+" reqn="+str(reqn)+" threadid="+str(threading.get_ident()))
     while True:
-        wait_last_contact = time.time();
+        wait_last_contact = time.time()
         while True:
-            logging.info("waiting for reply")
+            current_app.logger.info("waiting for reply")
             try:
                 message = sqs.sqs_client.receive_message(queue_resp,1,20)
             except Exception as err:
                 etxt =  "Failed to read from queue "+sqs.queue_resp_name+". Err="+str(err)
-                logging.error(err)
+                current_app.logger.error(err)
                 sqs.create_resp_queue()
                 return etxt, 500
-            logging.info(str(repr(message))[0:200])
+            current_app.logger.info(str(repr(message))[0:200])
             if message is None:
-                logging.info("No reply after " + str(time.time() - wait_last_contact))
+                current_app.logger.info("No reply after " + str(time.time() - wait_last_contact))
                 if (time.time() - wait_last_contact) > current_app.TIMEOUT:
                     return "No response from database server (time="+str(time.time() - wait_last_contact)+")", 500
                 continue
@@ -122,7 +123,7 @@ def handler(app, acnt, path=None):
         try:
             sqs.sqs_client.delete_message(queue_resp, receipt_handle)
         except Exception as err:
-            logging.error(err)
+            current_app.logger.error(err)
             sqs.create_resp_queue()
 
         try:
@@ -130,11 +131,11 @@ def handler(app, acnt, path=None):
         except:
             return "failed to parse reply as json - probably too big "+message['Body'], 500
 
-        logging.info('Received and deleted message reqn=' + str(reply['REQ_NUM']) + ' on '+" threadid="+str(threading.get_ident()))
+        current_app.logger.info('Received and deleted message reqn=' + str(reply['REQ_NUM']) + ' on '+" threadid="+str(threading.get_ident()))
         reply_reqn = reply['REQ_NUM']
         if (reply_reqn != reqn and reply_reqn != "CRASH"):
             if (reply_reqn == "PING"):
-                logging.info('PING so wait')
+                current_app.logger.info('PING so wait')
                 continue
             return "request number mismatch "+str(reqn)+message['Body'], 500
         body = reply['RESPONSE']

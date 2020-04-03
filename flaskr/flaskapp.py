@@ -12,7 +12,7 @@ class FlaskApp(Flask):
         super(FlaskApp, self).__init__(*args, **kwargs)
 
         self.config.from_pyfile('config.py')
-        logging.info(self.config)
+        self.logger.info(self.config)
 
         self.TIMEOUT = self.config.get('TIMEOUT',300)
 

@@ -90,5 +90,8 @@ class sqs_cl():
             pass
 
     def log(self, message):
-        logging.info(message)
+        try:
+            current_app.logger.info(message)
+        except:
+            pass
 
