@@ -11,9 +11,9 @@ import time
 class sqs_cl():
 
     def __init__(self):
-        self.log("thread starting "+str(threading.get_ident()))
+        self.log("!!!!!!! create new sqs")
 
-        atexit.register(self.cleanup)
+        atexit.register(self.cleanup) # This works with real threading - but not with eventlet
 
         config = current_app.config
 
@@ -33,6 +33,10 @@ class sqs_cl():
         self.n_resp_queue = 0
         self.create_resp_queue()
         self.server_name = platform.node()
+        self.reqn = 0
+
+    def __del__(self):
+        self.cleanup()
 
     def get_queue_resp(self):
         idle_time = time.time() - self.last_qtime
@@ -78,6 +82,10 @@ class sqs_cl():
             self.log("got existing queue "+queue_name)
         return queue['QueueUrl']
 
+    def reset(self):
+        # I hoped connection pool did this but no
+        self.cleanup()
+
     def cleanup(self):
         self.log("cleanup")
         if ('cyg-resp1' in self.queue_resp):
@@ -94,4 +102,3 @@ class sqs_cl():
             current_app.logger.info(message)
         except:
             pass
-
