@@ -11,9 +11,9 @@ import time
 class sqs_cl():
 
     def __init__(self):
-        self.log("!!!!!!! create new sqs")
+        self.log("thread starting "+str(threading.get_ident()))
 
-        atexit.register(self.cleanup) # This works with real threading - but not with eventlet
+        atexit.register(self.cleanup)
 
         config = current_app.config
 
@@ -33,10 +33,6 @@ class sqs_cl():
         self.n_resp_queue = 0
         self.create_resp_queue()
         self.server_name = platform.node()
-        self.reqn = 0
-
-    def __del__(self):
-        self.cleanup()
 
     def get_queue_resp(self):
         idle_time = time.time() - self.last_qtime
@@ -81,10 +77,6 @@ class sqs_cl():
             queue = self.sqs_client.sqs.get_queue_url(QueueName = queue_name)
             self.log("got existing queue "+queue_name)
         return queue['QueueUrl']
-
-    def reset(self):
-        # I hoped connection pool did this but no
-        self.cleanup()
 
     def cleanup(self):
         self.log("cleanup")
