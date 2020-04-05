@@ -11,11 +11,6 @@ class FlaskApp(Flask):
     def __init__(self, *args, **kwargs):
         super(FlaskApp, self).__init__(*args, **kwargs)
 
-        self.config.from_pyfile('config.py')
-        self.logger.info(self.config)
-
-        self.TIMEOUT = self.config.get('TIMEOUT',300)
-
         # ensure the instance folder exists
         try:
             os.makedirs(self.instance_path)

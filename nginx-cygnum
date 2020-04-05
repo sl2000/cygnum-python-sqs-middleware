@@ -16,6 +16,10 @@ upstream cygnum_server_c41 {
     server unix:/home/ubuntu/cygnum/cygnum-c41.sock fail_timeout=0;
 }
 
+upstream cygnum_server_test {
+    server unix:/home/ubuntu/cygnum/cygnum-test.sock fail_timeout=0;
+}
+
 server {
     server_name dev.caci-es.co.uk cygnum.caci-es.co.uk;
     client_max_body_size 4G;
@@ -51,6 +55,10 @@ server {
     location /crel/ {
         proxy_pass http://cygnum_server_c41;
     }
+
+    location /test/ {
+        proxy_pass http://cygnum_server_test;
+    }    
 
     listen 443 ssl; # managed by Certbot
     ssl_certificate /etc/letsencrypt/live/dev.caci-es.co.uk/fullchain.pem; # managed by Certbot

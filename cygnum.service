@@ -8,7 +8,7 @@ User=www-data
 Group=www-data
 WorkingDirectory=/home/ubuntu/cygnum
 Environment="PATH=/home/ubuntu/cygnum/env/bin"
-# Environment="CYGNUM_CONFIG=/home/ubuntu/cygnum/instance/config-xxx.py"
+Environment="CYGNUM_CONFIG=/home/ubuntu/cygnum/instance/config.py"
 ExecStart=/home/ubuntu/cygnum/env/bin/gunicorn --config gunicorn.conf.py wsgi:app
 
 [Install]

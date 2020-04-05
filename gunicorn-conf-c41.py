@@ -7,7 +7,6 @@ backlog = 2048
 
 # workers = multiprocessing.cpu_count() * 2 + 1
 workers = 1
-threads = 2
 worker_class = 'eventlet'
 worker_connections = 100
 

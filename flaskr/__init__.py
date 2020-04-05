@@ -20,6 +20,9 @@ def create_app(test_config=None):
     app.logger.setLevel(loglevel)
     # logging.basicConfig(level=loglevel,format='(%(threadName)-10s) %(message)s',)
     app.logger.debug("create app")
+
+    app.TIMEOUT = app.config.get('TIMEOUT',300)
+    app.logger.info("TIMEOUT="+str(app.TIMEOUT))
     
     from flaskr import handler
     app.register_blueprint(handler.bp)

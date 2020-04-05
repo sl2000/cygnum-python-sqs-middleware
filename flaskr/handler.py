@@ -101,7 +101,7 @@ def handler(app, acnt, path=None):
     while True:
         wait_last_contact = time.time()
         while True:
-            current_app.logger.info("waiting for reply")
+            current_app.logger.info("waiting for reply timeout=" + str(current_app.TIMEOUT))
             try:
                 message = sqs.sqs_client.receive_message(queue_resp,1,20)
             except Exception as err:
