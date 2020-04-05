@@ -38,13 +38,15 @@ def test_stream():
 @bp.route('/<app>/ob.aspx/<acnt>/', methods=['POST', 'GET', 'PATCH', 'PUT', 'DELETE'])
 @bp.route('/<app>/ob.aspx/<acnt>/<path:path>', methods=['POST', 'GET', 'PATCH', 'PUT', 'DELETE'])
 def handler(app, acnt, path=None):
+    current_app.logger.info("!!!!!!! request received")
+    with current_app.rqcntr_lock:
+        reqn = current_app.rqcntr + 1
+        current_app.rqcntr = reqn
+    cp_start = time.time()
     with current_app.sqs_pool.item() as sqs:
+        cp_q_durn = time.time() - cp_start
         sqs.reqn += 1
-        current_app.logger.info("!!!!!!! got sqs reqn="+str(sqs.reqn))
-
-        with current_app.rqcntr_lock:
-            reqn = current_app.rqcntr + 1
-            current_app.rqcntr = reqn
+        current_app.logger.info(str(reqn)+" got sqs reqn="+str(sqs.reqn)+" wait="+str(cp_q_durn))
 
         http = {
             "URL": request.url,
@@ -72,7 +74,7 @@ def handler(app, acnt, path=None):
         post_data = request.get_data()
         queue_resp = sqs.get_queue_resp()
         
-        current_app.logger.info('!!!!!! queue='+queue_resp+" qreqn="+str(sqs.reqn))
+        current_app.logger.info(str(reqn)+' queue='+queue_resp+" qreqn="+str(sqs.reqn))
 
         req = {
             "QUEUE_RESP": queue_resp,
@@ -88,11 +90,11 @@ def handler(app, acnt, path=None):
         queue_req = sqs.queue_rqs[acnt]
 
         r = sqs.sqs_client.send_message(queue_req, str_req, {})
-        current_app.logger.info("!!!!!!!! send to "+queue_req+" reply to "+queue_req+" reqn="+str(reqn)+" threadid="+str(threading.get_ident()))
+        current_app.logger.info(str(reqn)+" send to "+queue_req+" reply to "+queue_req+" reqn="+str(reqn)+" threadid="+str(threading.get_ident()))
         while True:
             wait_last_contact = time.time()
             while True:
-                current_app.logger.info("waiting for reply")
+                current_app.logger.info(str(reqn)+" waiting for reply")
                 try:
                     message = sqs.sqs_client.receive_message(queue_resp,1,20)
                 except Exception as err:
@@ -100,9 +102,9 @@ def handler(app, acnt, path=None):
                     current_app.logger.error(err)
                     sqs.create_resp_queue()
                     return etxt, 500
-                current_app.logger.info(str(repr(message))[0:200])
+                current_app.logger.info(str(reqn)+" "+str(repr(message))[0:200])
                 if message is None:
-                    current_app.logger.info("No reply after " + str(time.time() - wait_last_contact))
+                    current_app.logger.info(str(reqn)+" No reply after " + str(time.time() - wait_last_contact))
                     if (time.time() - wait_last_contact) > current_app.TIMEOUT:
                         return "No response from database server (time="+str(time.time() - wait_last_contact)+")", 500
                     continue
@@ -122,11 +124,11 @@ def handler(app, acnt, path=None):
             except:
                 return "failed to parse reply as json - probably too big "+message['Body'], 500
 
-            current_app.logger.info('Received and deleted message reqn=' + str(reply['REQ_NUM']) + ' on '+" threadid="+str(threading.get_ident()))
+            current_app.logger.info(str(reqn)+' Received and deleted message reqn=' + str(reply['REQ_NUM']) + ' on '+" threadid="+str(threading.get_ident()))
             reply_reqn = reply['REQ_NUM']
             if (reply_reqn != reqn and reply_reqn != "CRASH"):
                 if (reply_reqn == "PING"):
-                    current_app.logger.info('PING so wait')
+                    current_app.logger.info(str(reqn)+' PING so wait')
                     continue
                 return "request number mismatch "+str(reqn)+message['Body'], 500
             body = reply['RESPONSE']
@@ -137,6 +139,7 @@ def handler(app, acnt, path=None):
         rheaders = response.headers
         status = 200
         cache = False
+        current_app.logger.info(str(reqn)+' Complete')
 
     for header in headers.split('\xFD'):
         header = header.split('\xFC')

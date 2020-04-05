@@ -8,7 +8,9 @@ backlog = 2048
 # workers = multiprocessing.cpu_count() * 2 + 1
 workers = 1
 worker_class = 'eventlet'
-worker_connections = 10
+worker_connections = 100
+#worker_class = 'gthread'
+#threads = 4
 
 max_requests = 1000 # This is a simple method to help limit the damage of memory leaks.
 max_requests_jitter = 50

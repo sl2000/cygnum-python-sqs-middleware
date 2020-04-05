@@ -7,6 +7,7 @@ import platform
 from pysqs_extended_client.SQSClientExtended import SQSClientExtended
 import threading
 import time
+from uuid import uuid4
 
 class sqs_cl():
 
@@ -61,9 +62,10 @@ class sqs_cl():
             + "-" + platform.node().replace("-","_")
             + "-" + date.today().strftime("%Y%m%d")
             + "-" + str(os.getpid())
-            + "-" + str(threading.get_ident())
+            # + "-" + str(threading.get_ident())
             + "-" + str(self.n_resp_queue)
-        )
+            + "-" + str(uuid4())
+        )[0:80]
         resp_qname = resp_qname.replace(".","_")
         self.queue_resp_name = resp_qname
         self.queue_resp = self.__get_queue(resp_qname)
