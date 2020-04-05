@@ -10,6 +10,8 @@ import time
 
 class sqs_cl():
 
+    n_resp_queue = 0
+
     def __init__(self):
         self.log("!!!!!!! create new sqs")
 
@@ -30,7 +32,6 @@ class sqs_cl():
             )
             self.queue_rqs[acnt] = self.__get_queue(req_qname)
 
-        self.n_resp_queue = 0
         self.create_resp_queue()
         self.server_name = platform.node()
         self.reqn = 0
