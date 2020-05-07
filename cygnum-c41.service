@@ -1,7 +1,8 @@
 # sudo ln -s /home/ubuntu/cygnum/cygnum-c41.service /etc/systemd/system/cygnum-c41.service
 [Unit]
 Description=Gunicorn instance to serve cygnum
-After=network.target
+PartOf=cygnum.service
+After=cygnum.service
 
 [Service]
 User=www-data
@@ -12,4 +13,4 @@ Environment="CYGNUM_CONFIG=/home/ubuntu/cygnum/instance/config-c41.py"
 ExecStart=/home/ubuntu/cygnum/env/bin/gunicorn --config gunicorn-conf-c41.py wsgi:app
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=cygnum.service

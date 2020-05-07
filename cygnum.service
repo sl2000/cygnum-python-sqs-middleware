@@ -1,15 +1,15 @@
 # sudo ln -s /home/ubuntu/cygnum/cygnum.service /etc/systemd/system/cygnum.service
 [Unit]
-Description=Gunicorn instance to serve cygnum
+Description=Cygnum Gunicorn Services
 After=network.target
 
 [Service]
-User=www-data
-Group=www-data
-WorkingDirectory=/home/ubuntu/cygnum
-Environment="PATH=/home/ubuntu/cygnum/env/bin"
-Environment="CYGNUM_CONFIG=/home/ubuntu/cygnum/instance/config.py"
-ExecStart=/home/ubuntu/cygnum/env/bin/gunicorn --config gunicorn.conf.py wsgi:app
+# The dummy program will exit
+Type=oneshot
+# Execute a dummy program
+ExecStart=/bin/true
+# This service shall be considered active after start
+RemainAfterExit=yes
 
 [Install]
 WantedBy=multi-user.target

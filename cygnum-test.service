@@ -1,7 +1,8 @@
 # sudo ln -s /home/ubuntu/cygnum/cygnum-test.service /etc/systemd/system/cygnum-test.service
 [Unit]
 Description=Gunicorn instance to serve cygnum
-After=network.target
+PartOf=cygnum.service
+After=cygnum.service
 
 [Service]
 User=www-data
@@ -12,4 +13,5 @@ Environment="CYGNUM_CONFIG=/home/ubuntu/cygnum/instance/config-test.py"
 ExecStart=/home/ubuntu/cygnum/env/bin/gunicorn --config gunicorn-conf-test.py wsgi:app
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=cygnum.service
+
