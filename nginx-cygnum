@@ -5,136 +5,85 @@ proxy_cache_key "$scheme$request_method$request_uri";
 server_tokens off;
 
 upstream cygnum_server_dev {
-    server unix:/home/ubuntu/cygnum/cygnum.sock fail_timeout=0;
+    server unix:/home/ubuntu/cygnum/cygnum-dev.sock fail_timeout=0;
 }
 
-upstream cygnum_server_trel {
-    server unix:/home/ubuntu/cygnum/cygnum-trel.sock fail_timeout=0;
+upstream cygnum_server_o_t {
+    server unix:/home/ubuntu/cygnum/cygnum-o-t.sock fail_timeout=0;
 }
 
-upstream cygnum_server_c41 {
-    server unix:/home/ubuntu/cygnum/cygnum-c41.sock fail_timeout=0;
+upstream cygnum_server_o_l {
+    server unix:/home/ubuntu/cygnum/cygnum-o-l.sock fail_timeout=0;
 }
 
-upstream cygnum_server_test {
-    server unix:/home/ubuntu/cygnum/cygnum-test.sock fail_timeout=0;
-}
+
+client_max_body_size 4G;
+
+root /home/ubuntu/nginx-static;
+
+proxy_cache cygnum_cache;
+proxy_cache_lock on;
+add_header X-CACI-Cache $upstream_cache_status;
+
+proxy_send_timeout 7200s;
+proxy_read_timeout 7200s;
+
+proxy_set_header Host $http_host;
+proxy_set_header X-Forwarded-Remote-Addr $remote_addr;
+proxy_set_header X-Forwarded-Proto $scheme;
+
+proxy_redirect off;
+
+add_header Expect-CT 'enforce, max-age=30, report-uri="https://cacies.report-uri.com/r/d/ct/reportOnly"' always;
+add_header Strict-Transport-Security "max-age=31536000" always;
+add_header X-Content-Type-Options "nosniff" always;
+add_header X-Frame-Options "SAMEORIGIN" always;
+add_header X-XSS-Protection "1; mode=block" always;
+
 
 server {
-    server_name dev.caci-es.co.uk cygnum.caci-es.co.uk;
-    client_max_body_size 4G;
-    keepalive_timeout 5;
-
-    proxy_cache cygnum_cache;
-    proxy_cache_lock on;
-    add_header X-CACI-Cache $upstream_cache_status;
-
-    proxy_send_timeout 7200s;
-    proxy_read_timeout 7200s;
-
-    proxy_set_header Host $http_host;
-    proxy_set_header X-Forwarded-Remote-Addr $remote_addr;
-    proxy_set_header X-Forwarded-Proto $scheme;
-
-    proxy_redirect off;
-
-    add_header Expect-CT 'enforce, max-age=30, report-uri="https://cacies.report-uri.com/r/d/ct/reportOnly"' always;
-    add_header Strict-Transport-Security "max-age=31536000" always;
-    add_header X-Content-Type-Options "nosniff" always;
-    add_header X-Frame-Options "SAMEORIGIN" always;
-    add_header X-XSS-Protection "1; mode=block" always;
-
-    location /tcowebsu/ {
+    server_name support-test.caci-es.co.uk;
+    listen 80;
+    location / {  
+        return 301 https://support-test.caci-es.co.uk/support-test/ob.aspx/support/;
+    }   
+    location /support-test/ {
+        proxy_pass http://cygnum_server_o_t;
+    }
+    location /dev/ {
         proxy_pass http://cygnum_server_dev;
     }
+}
 
-    location /trel/ {
-        proxy_pass http://cygnum_server_trel;
-    }
-
-    location /crel/ {
-        proxy_pass http://cygnum_server_c41;
-    }
-
+server {
+    server_name es-test.caci-es.co.uk;
+    listen 80;
+    location / {  
+        return 301 https://es-test.caci-es.co.uk/test/ob.aspx/ob_t35/;
+    }  
     location /test/ {
-        proxy_pass http://cygnum_server_test;
-    }    
-
-    listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/dev.caci-es.co.uk/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/dev.caci-es.co.uk/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-
-    ssl_stapling on;
-    ssl_stapling_verify on;
-
-
-
-
-
-
-    ssl_trusted_certificate /etc/letsencrypt/live/dev.caci-es.co.uk/chain.pem; # managed by Certbot
-
-
-
-}
-
-server {
-    server_name essupport.caci-es.co.uk;
-
-    proxy_send_timeout 7200s;
-    proxy_read_timeout 7200s;
-
-    proxy_set_header Host $http_host;
-    proxy_set_header X-Forwarded-Remote-Addr $remote_addr;
-    proxy_set_header X-Forwarded-Proto $scheme;
-
-    proxy_redirect off;
-
-    location / {
-        proxy_pass https://essupport.caci.co.uk;
+        proxy_pass http://cygnum_server_o_t;
     }
-
-
-    listen 443 ssl; # managed by Certbot
-    ssl_certificate /etc/letsencrypt/live/dev.caci-es.co.uk/fullchain.pem; # managed by Certbot
-    ssl_certificate_key /etc/letsencrypt/live/dev.caci-es.co.uk/privkey.pem; # managed by Certbot
-    include /etc/letsencrypt/options-ssl-nginx.conf; # managed by Certbot
-    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem; # managed by Certbot
-
-
-
-
-    ssl_trusted_certificate /etc/letsencrypt/live/dev.caci-es.co.uk/chain.pem; # managed by Certbot
-    ssl_stapling on; # managed by Certbot
-    ssl_stapling_verify on; # managed by Certbot
-
 }
 
 server {
-    if ($host = dev.caci-es.co.uk) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-
-
+    server_name support.caci-es.co.uk;
     listen 80;
-    server_name dev.caci-es.co.uk;
-    return 404; # managed by Certbot
-
+    location / {  
+        return 301 https://support.caci-es.co.uk/support/ob.aspx/support/;
+    }
+    location /support/ {
+        proxy_pass http://cygnum_server_o_l;
+    }
 }
 
-
-
 server {
-    if ($host = essupport.caci-es.co.uk) {
-        return 301 https://$host$request_uri;
-    } # managed by Certbot
-
-
-    server_name essupport.caci-es.co.uk;
+    server_name es-live.caci-es.co.uk;
     listen 80;
-    return 404; # managed by Certbot
-
-
+    location / {  
+        return 301 https://es-live.caci-es.co.uk/live/ob.aspx/ob_live/;
+    }  
+    location /live/ {
+        proxy_pass http://cygnum_server_o_l;
+    }
 }

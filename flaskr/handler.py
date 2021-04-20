@@ -16,11 +16,13 @@ from flaskr.sqs import sqs_cl
 
 bp = Blueprint('handler', __name__)
 
-@bp.route('/config/')
-def return_config():
+@bp.route('/<app>/config/')
+def return_config(app):
     response = {
-        "UNIDATA_SERVER_ID": current_app.config['UNIDATA_SERVER_ID'],
-        "BUCKET_NAME": current_app.config['BUCKET_NAME']
+        "ACCOUNTS": current_app.config['ACCOUNTS'],        
+        "AWS_KEY": current_app.config['AWS_ACCESS_KEY'],
+        "BUCKET_NAME": current_app.config['BUCKET_NAME'],
+        "UNIDATA_SERVER_ID": current_app.config['UNIDATA_SERVER_ID']
     }
     return response
 
