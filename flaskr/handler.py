@@ -16,7 +16,11 @@ from flaskr.sqs import sqs_cl
 
 bp = Blueprint('handler', __name__)
 
+<<<<<<< HEAD
 @bp.route('/<app>/config/')
+=======
+@bp.route('/<app>/config-8f7fc8b1-69f6-4559-951e-97e1cfb73847/')
+>>>>>>> 1bfb3ce2bb7c60862fe59487e4cdfd9145eb8e06
 def return_config(app):
     response = {
         "ACCOUNTS": current_app.config['ACCOUNTS'],        
@@ -164,6 +168,8 @@ def handler(app, acnt, path=None):
         elif lname == "redirect":
             status = 302
             rheaders.set('Location', val)
+        elif lname == "set-cookie":
+            rheaders.add(name,val)
         else:
             rheaders.set(name,val)
 
