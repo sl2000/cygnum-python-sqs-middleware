@@ -155,8 +155,10 @@ def handler(app, acnt, path=None):
             body = base64.b64decode(body)
         elif lname == "cache":
             cache = True
-        elif lname == "cache-control" and val == "No-Cache":
-            cache = False
+        elif lname == "cache-control":
+            if val == "No-Cache":
+                cache = False
+            # ignore other cache control headers - we're either cached or not
         elif lname == "status":
             status = int(val)
         elif lname == "x-tco-version":
@@ -174,8 +176,6 @@ def handler(app, acnt, path=None):
         response.cache_control.max_age = 31536000
     else:
         response.cache_control.private = True
-        response.cache_control.no_store = True
-        response.cache_control.no_cache = True
 
     response.data = body
     
