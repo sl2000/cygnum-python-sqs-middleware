@@ -1,0 +1,17 @@
+# sudo ln -s /home/ubuntu/cygnum/cygnum-o-t.service /etc/systemd/system/cygnum-o-t.service
+[Unit]
+Description=Gunicorn instance to serve cygnum
+PartOf=cygnum.service
+After=cygnum.service
+
+[Service]
+User=www-data
+Group=www-data
+WorkingDirectory=/home/ubuntu/cygnum
+Environment="PATH=/home/ubuntu/cygnum/env/bin"
+Environment="CYGNUM_CONFIG=/home/ubuntu/cygnum/instance/config-o-t.py"
+ExecStart=/home/ubuntu/cygnum/env/bin/gunicorn --config gunicorn-conf-o-t.py wsgi:app
+
+[Install]
+WantedBy=cygnum.service
+
