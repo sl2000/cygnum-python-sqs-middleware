@@ -168,6 +168,8 @@ def handler(app, acnt, path=None):
             rheaders.set('Location', val)
         elif lname == "set-cookie":
             rheaders.add(name,val)
+        elif lname == "x-sleep":
+            time.sleep(int(val)/1000)
         else:
             rheaders.set(name,val)
 
