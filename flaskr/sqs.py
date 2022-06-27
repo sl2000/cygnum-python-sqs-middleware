@@ -31,7 +31,9 @@ class sqs_cl():
                 + "-rq"
                 + "-" + acnt
             )
-            self.queue_rqs[acnt] = self.__get_queue(req_qname)
+            queue = self.sqs_client.sqs.get_queue_url(QueueName = req_qname)['QueueUrl']
+            self.log("got existing queue "+queue)
+            self.queue_rqs[acnt] = queue
 
         self.create_resp_queue()
         self.server_name = platform.node()
@@ -76,7 +78,8 @@ class sqs_cl():
             queue = self.sqs_client.sqs.create_queue(
                 QueueName = queue_name,
                 Attributes = {
-                    'MessageRetentionPeriod': '300'
+                    'MessageRetentionPeriod': '300',
+                    'SqsManagedSseEnabled': 'true'
                 }
             )
             self.log("created new queue "+queue_name)
