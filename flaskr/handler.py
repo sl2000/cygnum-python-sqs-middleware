@@ -1,7 +1,8 @@
-from flask import Flask, escape, Blueprint, current_app, jsonify, make_response, request, Response
+from flask import Flask, Blueprint, current_app, jsonify, make_response, request, Response
 import base64
 import botocore
 from connection_pool import ConnectionPool
+import html
 import json
 import logging
 import os
@@ -87,7 +88,7 @@ def handler(app, acnt, path=None):
         str_req = json.dumps(req)
 
         if acnt not in sqs.queue_rqs:
-            return make_response('Account '+escape(acnt)+' not valid.', 404)
+            return make_response('Account '+html.escape(acnt)+' not valid.', 404)
 
         queue_req = sqs.queue_rqs[acnt]
 
