@@ -1,11 +1,11 @@
-sudo nginx -t -- test nginx configuration
-sudo systemctl reload nginx -- restart nginx
-sudo systemctl kill -s HUP cygnum-xxx -- restart gunicorn gracefully with new config / software - see http://docs.gunicorn.org/en/latest/signals.html
+nginx -t -- test nginx configuration
+systemctl reload nginx -- restart nginx
+systemctl kill -s HUP cygnum-xxx -- restart gunicorn gracefully with new config / software - see http://docs.gunicorn.org/en/latest/signals.html
 
-sudo less /var/log/nginx/error.log -- view the Nginx error logs.
-sudo less /var/log/nginx/access.log -- view the Nginx access logs.
-sudo journalctl -u nginx -- view the Nginx process logs.
-sudo journalctl -u cygnum-xxx --since "1 hour ago" -- view Python app log (e.g. cygnum-dev, cygnum-c41 etc)
+less /var/log/nginx/error.log -- view the Nginx error logs.
+less /var/log/nginx/access.log -- view the Nginx access logs.
+journalctl -u nginx -- view the Nginx process logs.
+journalctl -u cygnum-xxx --since "1 hour ago" -- view Python app log (e.g. cygnum-dev, cygnum-c41 etc)
 
 source env/bin/activate
 gunicorn --config gunicorn.conf.py wsgi:app -- run directly (may want to use when developing)
