@@ -9,7 +9,7 @@ from flaskr.sqs import sqs_cl
 
 class FlaskApp(Flask):
 
-    OB_VERSION = "211118"
+    OB_VERSION = "251210"
 
     def __init__(self, *args, **kwargs):
         super(FlaskApp, self).__init__(*args, **kwargs)
@@ -32,5 +32,5 @@ class FlaskApp(Flask):
             max_size=50,
             max_usage=100000,
             idle=1800,
-            ttl=60
+            ttl=86400
         )
