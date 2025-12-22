@@ -38,13 +38,17 @@ class sqs_cl():
         self.create_resp_queue()
         self.server_name = platform.node()
         self.reqn = 0
+        self.queue_failed = False
 
     def __del__(self):
         self.cleanup()
 
     def get_queue_resp(self):
         idle_time = time.time() - self.last_qtime
-        if idle_time >= 120:
+        if self.queue_failed:
+            self.create_resp_queue()
+            self.queue_failed = False
+        elif idle_time >= 120:
             # Check that can read from queue - otherwise create a new one
             # Copes with queue being deleted by server tidy up process
             try:

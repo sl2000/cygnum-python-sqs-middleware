@@ -133,6 +133,7 @@ def handler(app, acnt, path=None):
                 if (reply_reqn == "PING"):
                     current_app.logger.info(str(reqn)+' PING so wait')
                     continue
+                sqs.queue_failed = True
                 return "request number mismatch "+str(reqn)+message['Body'], 500
             body = reply['RESPONSE']
             headers = reply['HEADERS']
