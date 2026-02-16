@@ -1,12 +1,12 @@
 from flask import Flask, Blueprint, current_app, jsonify, make_response, request, Response
 import base64
-import botocore
+import boto3
+import sqs_extended_client
 from connection_pool import ConnectionPool
 import html
 import json
 import logging
 import os
-from pysqs_extended_client.SQSClientExtended import SQSClientExtended
 import threading
 import time
 import uuid
@@ -92,32 +92,32 @@ def handler(app, acnt, path=None):
 
         queue_req = sqs.queue_rqs[acnt]
 
-        r = sqs.sqs_client.send_message(queue_req, str_req, {})
+        r = sqs.sqs_extended_client.send_message(QueueUrl=queue_req, MessageBody=str_req)
         current_app.logger.info(str(reqn)+" send to "+queue_req+" reply to "+queue_req+" reqn="+str(reqn)+" threadid="+str(threading.get_ident()))
         while True:
             wait_last_contact = time.time()
             while True:
                 current_app.logger.info(str(reqn)+" waiting for reply")
                 try:
-                    message = sqs.sqs_client.receive_message(queue_resp,1,20)
+                    messages = sqs.sqs_extended_client.receive_message(QueueUrl=queue_resp, MaxNumberOfMessages=1, WaitTimeSeconds=20).get('Messages', [])
                 except Exception as err:
                     etxt =  "Failed to read from queue "+sqs.queue_resp_name+". Err="+str(err)
                     current_app.logger.error(err)
                     sqs.create_resp_queue()
                     return etxt, 500
-                current_app.logger.info(str(reqn)+" "+str(repr(message))[0:200])
-                if message is None:
+                current_app.logger.info(str(reqn)+" "+str(repr(messages))[0:200])
+                if not messages:
                     current_app.logger.info(str(reqn)+" No reply after " + str(time.time() - wait_last_contact))
                     if (time.time() - wait_last_contact) > current_app.TIMEOUT:
                         return "No response from database server (time="+str(time.time() - wait_last_contact)+")", 500
                     continue
                 break
             
-            message = message[0]
+            message = messages[0]
             receipt_handle = message['ReceiptHandle']
 
             try:
-                sqs.sqs_client.delete_message(queue_resp, receipt_handle)
+                sqs.sqs_extended_client.delete_message(QueueUrl=queue_resp, ReceiptHandle=receipt_handle)
             except Exception as err:
                 current_app.logger.error(err)
                 sqs.create_resp_queue()
