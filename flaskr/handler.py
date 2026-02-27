@@ -22,7 +22,8 @@ def return_config(app):
     response = {
         "ACCOUNTS": current_app.config['ACCOUNTS'],        
         "BUCKET_NAME": current_app.config['BUCKET_NAME'],
-        "UNIDATA_SERVER_ID": current_app.config['UNIDATA_SERVER_ID']
+        "UNIDATA_SERVER_ID": current_app.config['UNIDATA_SERVER_ID'],
+        "VERSION": current_app.OB_VERSION,
     }
     return response
 
