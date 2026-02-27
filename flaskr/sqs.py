@@ -21,9 +21,8 @@ class sqs_cl():
 
         config = current_app.config
 
-        # self.sqs_client = SQSClientExtended(config['AWS_ACCESS_KEY'], config['AWS_SECRET_KEY'], config['AWS_REGION'], config['BUCKET_NAME'])
-        self.sqs_extended_client = boto3.client("sqs",aws_access_key_id=config['AWS_ACCESS_KEY'], aws_secret_access_key=config['AWS_SECRET_KEY'], region_name=config['AWS_REGION'])
-        self.sqs_extended_client.s3_client = boto3.client("s3",aws_access_key_id=config['AWS_ACCESS_KEY'], aws_secret_access_key=config['AWS_SECRET_KEY'], region_name=config['AWS_REGION'])
+        self.sqs_extended_client = boto3.client("sqs",region_name=config['AWS_REGION'])
+        self.sqs_extended_client.s3_client = boto3.client("s3",region_name=config['AWS_REGION'])
         self.sqs_extended_client.large_payload_support = config['BUCKET_NAME']
         self.queue_rqs = {}
         for acnt in config['ACCOUNTS']:

@@ -21,7 +21,6 @@ bp = Blueprint('handler', __name__)
 def return_config(app):
     response = {
         "ACCOUNTS": current_app.config['ACCOUNTS'],        
-        "AWS_KEY": current_app.config['AWS_ACCESS_KEY'],
         "BUCKET_NAME": current_app.config['BUCKET_NAME'],
         "UNIDATA_SERVER_ID": current_app.config['UNIDATA_SERVER_ID']
     }
